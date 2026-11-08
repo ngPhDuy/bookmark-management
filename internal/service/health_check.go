@@ -30,6 +30,8 @@ func NewHealthCheckService(generator func() string, serviceName, instanceID stri
 	}
 }
 
+// HealthCheck returns the health status of the service, including its name
+// and instance ID.
 func (s *healthCheckService) HealthCheck() (response.HealthCheckResponse, error) {
 
 	return response.HealthCheckResponse{

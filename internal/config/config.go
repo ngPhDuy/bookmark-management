@@ -14,6 +14,8 @@ type AppConfig struct {
 	InstanceID  string `default:"" envconfig:"INSTANCE_ID"`
 }
 
+// NewAppConfig creates a new AppConfig instance by loading environment variables
+// from a .env file and processing them into the AppConfig struct.
 func NewAppConfig() *AppConfig {
 	logger := slog.New(
 		slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
