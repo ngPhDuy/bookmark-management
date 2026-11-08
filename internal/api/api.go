@@ -34,7 +34,7 @@ func (e *engine) Start() error {
 }
 
 func (e *engine) initRoutes() {
-	healthCheckService := service.NewHealthCheckService(utils.UUIDGenerator)
+	healthCheckService := service.NewHealthCheckService(utils.UUIDGenerator, e.cfg.ServiceName, e.cfg.InstanceID)
 	healthCheckHandler := handler.NewHealthCheckHandler(healthCheckService)
 
 	e.app.GET("/health-check", healthCheckHandler.HealthCheck)

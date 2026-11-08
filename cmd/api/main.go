@@ -6,11 +6,7 @@ import (
 )
 
 func main() {
-	cfg, err := config.NewAppConfig()
-
-	if err != nil {
-		panic(err)
-	}
+	cfg := config.NewAppConfig()
 
 	engine := api.NewEngine(cfg)
 

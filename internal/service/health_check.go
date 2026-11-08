@@ -5,9 +5,7 @@ import (
 )
 
 const (
-	OK           = "OK"
-	SERVICE_NAME = "bookmark-management"
-	INSTANCE_ID  = ""
+	OK = "OK"
 )
 
 type HealthCheckService interface {
@@ -15,25 +13,28 @@ type HealthCheckService interface {
 }
 
 type healthCheckService struct {
-	generator func() string
+	generator   func() string
+	serviceName string
+	instanceID  string
 }
 
-func NewHealthCheckService(generator func() string) HealthCheckService {
+func NewHealthCheckService(generator func() string, serviceName, instanceID string) HealthCheckService {
+	if instanceID == "" {
+		instanceID = generator()
+	}
+
 	return &healthCheckService{
-		generator: generator,
+		generator:   generator,
+		serviceName: serviceName,
+		instanceID:  instanceID,
 	}
 }
 
 func (s *healthCheckService) HealthCheck() (response.HealthCheckResponse, error) {
-	instanceId := INSTANCE_ID
-
-	if instanceId == "" {
-		instanceId = s.generator()
-	}
 
 	return response.HealthCheckResponse{
 		Message:     OK,
-		ServiceName: SERVICE_NAME,
-		InstanceID:  instanceId,
+		ServiceName: s.serviceName,
+		InstanceID:  s.instanceID,
 	}, nil
 }

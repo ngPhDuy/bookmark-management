@@ -1,6 +1,9 @@
 package config
 
 import (
+	"log/slog"
+	"os"
+
 	"github.com/joho/godotenv"
 	"github.com/kelseyhightower/envconfig"
 )
@@ -8,12 +11,18 @@ import (
 type AppConfig struct {
 	AppPort     int    `default:"8080" envconfig:"APP_PORT"`
 	ServiceName string `default:"bookmark-management-default" envconfig:"SERVICE_NAME"`
-	InstanceId  string `default:"" envconfig:"INSTANCE_ID"`
+	InstanceID  string `default:"" envconfig:"INSTANCE_ID"`
 }
 
-func NewAppConfig() (*AppConfig, error) {
+func NewAppConfig() *AppConfig {
+	logger := slog.New(
+		slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+			Level: slog.LevelDebug,
+		}),
+	)
+
 	if err := godotenv.Load(); err != nil {
-		return nil, err
+		logger.Warn("Load config fail", "err", err)
 	}
 
 	cfg := &AppConfig{}
@@ -21,8 +30,8 @@ func NewAppConfig() (*AppConfig, error) {
 	err := envconfig.Process("", cfg)
 
 	if err != nil {
-		return nil, err
+		logger.Warn("Process config fail", "err", err)
 	}
 
-	return cfg, nil
+	return cfg
 }
