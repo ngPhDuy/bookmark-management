@@ -3,11 +3,15 @@ package api
 import (
 	"fmt"
 
+	_ "github.com/ngPhDuy/bookmark-management/cmd/api/docs"
+
 	"github.com/gin-gonic/gin"
 	"github.com/ngPhDuy/bookmark-management/internal/config"
 	"github.com/ngPhDuy/bookmark-management/internal/handler"
 	"github.com/ngPhDuy/bookmark-management/internal/service"
 	"github.com/ngPhDuy/bookmark-management/internal/utils"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 type Engine interface {
@@ -34,6 +38,8 @@ func (e *engine) Start() error {
 }
 
 func (e *engine) initRoutes() {
+	e.app.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+
 	healthCheckService := service.NewHealthCheckService(utils.UUIDGenerator, e.cfg.ServiceName, e.cfg.InstanceID)
 	healthCheckHandler := handler.NewHealthCheckHandler(healthCheckService)
 

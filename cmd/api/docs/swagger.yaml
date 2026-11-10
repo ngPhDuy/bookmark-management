@@ -1,0 +1,38 @@
+basePath: /
+definitions:
+  response.HealthCheckResponse:
+    properties:
+      instance_id:
+        type: string
+      message:
+        type: string
+      service_name:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: REST API for managing bookmarks
+  title: Bookmark Management API
+  version: "1.0"
+paths:
+  /health-check:
+    get:
+      description: Check whether the service is running.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.HealthCheckResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Health check
+      tags:
+      - Health
+swagger: "2.0"

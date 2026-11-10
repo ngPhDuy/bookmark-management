@@ -1,0 +1,58 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "REST API for managing bookmarks",
+        "title": "Bookmark Management API",
+        "contact": {},
+        "version": "1.0"
+    },
+    "host": "localhost:8080",
+    "basePath": "/",
+    "paths": {
+        "/health-check": {
+            "get": {
+                "description": "Check whether the service is running.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Health"
+                ],
+                "summary": "Health check",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.HealthCheckResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "response.HealthCheckResponse": {
+            "type": "object",
+            "properties": {
+                "instance_id": {
+                    "type": "string"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "service_name": {
+                    "type": "string"
+                }
+            }
+        }
+    }
+}
