@@ -15,17 +15,22 @@ const (
 	MAX_KEY_LENGTH = 7
 )
 
+type redisClient interface {
+	SetNX(ctx context.Context, key string, value interface{}, expiration time.Duration) *goredis.BoolCmd
+	Get(ctx context.Context, key string) *goredis.StringCmd
+}
+
 type RedisRepository interface {
 	Set(ctx context.Context, value string, exp int) (string, error)
 	Get(ctx context.Context, key string) (string, error)
 }
 
 type redisRepository struct {
-	rdbClient          *goredis.Client
+	rdbClient          redisClient
 	randomKeyGenerator func(int) (string, error)
 }
 
-func NewRedisRepository(rdbClient *goredis.Client) RedisRepository {
+func NewRedisRepository(rdbClient redisClient) RedisRepository {
 	return &redisRepository{
 		rdbClient:          rdbClient,
 		randomKeyGenerator: utils.RandomKey,
