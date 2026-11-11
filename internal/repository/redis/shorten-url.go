@@ -4,9 +4,10 @@ import (
 	"context"
 	"time"
 
+	"fmt"
+
 	"github.com/ngPhDuy/bookmark-management/internal/utils"
 	goredis "github.com/redis/go-redis/v9"
-	"fmt"
 )
 
 const (
@@ -15,47 +16,47 @@ const (
 )
 
 type RedisRepository interface {
-	Set(key string, value string, exp int) error
-	Get(key string) (string, error)
+	Set(ctx context.Context, value string, exp int) (string, error)
+	Get(ctx context.Context, key string) (string, error)
 }
 
 type redisRepository struct {
-	ctx       context.Context
-	rdbClient *goredis.Client
+	rdbClient          *goredis.Client
+	randomKeyGenerator func(int) (string, error)
 }
 
-func NewRedisRepository(ctx context.Context, rdbClient *goredis.Client) RedisRepository {
+func NewRedisRepository(rdbClient *goredis.Client) RedisRepository {
 	return &redisRepository{
-		ctx:       ctx,
-		rdbClient: rdbClient,
+		rdbClient:          rdbClient,
+		randomKeyGenerator: utils.RandomKey,
 	}
 }
 
-// Set key and value with expiration is exp (seconds), retry 5 times to generate a unique key
-func (r *redisRepository) Set(key string, value string, exp int) error {
+// Set value for a random key with expiration is exp (seconds), retry 5 times to generate a unique key
+func (r *redisRepository) Set(ctx context.Context, value string, exp int) (string, error) {
 	for i := 0; i < MAX_ATTEMPTS; i++ {
-		key, err := utils.RandomKey(MAX_KEY_LENGTH)
+		key, err := r.randomKeyGenerator(MAX_KEY_LENGTH)
 
 		if err != nil {
-			return err
+			return "", err
 		}
 
-		ok, err := r.rdbClient.SetNX(r.ctx, key, value, time.Duration(exp)*time.Second).Result()
+		ok, err := r.rdbClient.SetNX(ctx, key, value, time.Duration(exp)*time.Second).Result()
 
 		if err != nil {
-			return err
+			return "", err
 		}
 
 		if ok {
-			return nil
+			return key, nil
 		}
 	}
 
-	return fmt.Errorf("redis: failed to set key after %d attempts", MAX_ATTEMPTS)
+	return "", fmt.Errorf("redis: failed to set key after %d attempts", MAX_ATTEMPTS)
 }
 
-func (r *redisRepository) Get(key string) (string, error) {
-	value, err := r.rdbClient.Get(r.ctx, key).Result()
+func (r *redisRepository) Get(ctx context.Context, key string) (string, error) {
+	value, err := r.rdbClient.Get(ctx, key).Result()
 
 	if err != nil {
 		return "", err
