@@ -9,9 +9,12 @@ import (
 )
 
 type AppConfig struct {
-	AppPort     int    `default:"8080" envconfig:"APP_PORT"`
-	ServiceName string `default:"bookmark-management-default" envconfig:"SERVICE_NAME"`
-	InstanceID  string `default:"" envconfig:"INSTANCE_ID"`
+	AppPort       int    `default:"8080" envconfig:"APP_PORT"`
+	ServiceName   string `default:"bookmark-management-default" envconfig:"SERVICE_NAME"`
+	InstanceID    string `default:"" envconfig:"INSTANCE_ID"`
+	RedisHost     string `default:"localhost" envconfig:"REDIS_HOST"`
+	RedisPort     int    `default:"6379" envconfig:"REDIS_PORT"`
+	RedisPassword string `default:"" envconfig:"REDIS_PASSWORD"`
 }
 
 // NewAppConfig creates a new AppConfig instance by loading environment variables
