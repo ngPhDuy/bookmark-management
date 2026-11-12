@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ngPhDuy/bookmark-management/internal/domain"
 	"github.com/ngPhDuy/bookmark-management/internal/model"
 	goredis "github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/assert"
@@ -101,7 +102,7 @@ func TestSet_NoSlot(t *testing.T) {
 	_, err := rep.SetIfNotExist(context.Background(), "key2", "https://www.google.com", 10)
 
 	//error -> ErrKeyExists, store: key2-"this is 2 slot"
-	assert.ErrorIs(t, err, ErrKeyExists)
+	assert.ErrorIs(t, err, domain.ErrKeyExists)
 	assert.Equal(t, "this is 2 slot", client.store["key2"])
 }
 
@@ -140,7 +141,7 @@ func TestGetFunc(t *testing.T) {
 			},
 			key:       "key4",
 			wantValue: "",
-			wantErr:   ErrKeyNotFound,
+			wantErr:   domain.ErrKeyNotFound,
 		},
 	}
 
