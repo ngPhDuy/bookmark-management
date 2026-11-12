@@ -19,10 +19,6 @@ type mockRedisClient struct {
 	//Errors simulation
 	setNXErr error
 	getErr   error
-
-	//To test usecase in mock repository
-	countSetNXCall int
-	lastExp        time.Duration
 }
 
 func newMockRedisClient() *mockRedisClient {
@@ -32,8 +28,6 @@ func newMockRedisClient() *mockRedisClient {
 }
 
 func (m *mockRedisClient) SetNX(ctx context.Context, key string, value interface{}, expiration time.Duration) *goredis.BoolCmd {
-	m.countSetNXCall++
-	m.lastExp = expiration
 
 	// error connection simulation
 	if m.setNXErr != nil {
@@ -64,21 +58,10 @@ func (m *mockRedisClient) Get(ctx context.Context, key string) *goredis.StringCm
 	return goredis.NewStringResult(value, nil)
 }
 
-// mock random key generator
-func sequenceKeys(keys ...string) func(int) (string, error) {
-	i := 0
-	return func(int) (string, error) {
-		k := keys[min(i, len(keys)-1)]
-		i++
-		return k, nil
-	}
-}
-
 // mock repository
-func newMockRepository(client redisClient, gen func(int) (string, error)) model.Repository {
+func newMockRepository(client redisClient) model.Repository {
 	return &redisRepository{
-		rdbClient:          client,
-		randomKeyGenerator: gen,
+		rdbClient: client,
 	}
 }
 
@@ -98,46 +81,28 @@ func TestSet_Success(t *testing.T) {
 	//mock redis client
 	client := newMockRedisClient()
 	//create mock repo
-	rep := newMockRepository(client, sequenceKeys("key1"))
+	rep := newMockRepository(client)
 
 	//set
-	_, err := rep.Set(context.Background(), "https://www.google.com", 10)
+	_, err := rep.SetIfNotExist(context.Background(), "key1", "https://www.google.com", 10)
 
-	//no error, store: key1-"https://www.google.com", count 1, lastExp 10
+	//no error, store: key1-"https://www.google.com"
 	assert.NoError(t, err)
 	assert.Equal(t, map[string]string{"key1": "https://www.google.com"}, client.store)
-	assert.Equal(t, 1, client.countSetNXCall)
-	assert.Equal(t, time.Duration(10)*time.Second, client.lastExp)
-}
-
-func TestSet_OneCollision(t *testing.T) {
-	client := newMockRedisClient()
-	client.store["key1"] = "this is my slot"
-
-	rep := newMockRepository(client, sequenceKeys("key1", "key2"))
-
-	_, err := rep.Set(context.Background(), "https://www.google.com", 10)
-
-	//no error, store: key2-"https://www.google.com", count 2, lastExp 10
-	assert.NoError(t, err)
-	assert.Equal(t, "https://www.google.com", client.store["key2"])
-	assert.Equal(t, 2, client.countSetNXCall)
-	assert.Equal(t, time.Duration(10)*time.Second, client.lastExp)
 }
 
 func TestSet_NoSlot(t *testing.T) {
 	client := newMockRedisClient()
 	client.store["key1"] = "this is my slot"
+	client.store["key2"] = "this is 2 slot"
 
-	rep := newMockRepository(client, sequenceKeys("key1"))
+	rep := newMockRepository(client)
 
-	_, err := rep.Set(context.Background(), "https://www.google.com", 10)
+	_, err := rep.SetIfNotExist(context.Background(), "key2", "https://www.google.com", 10)
 
-	//error, store: key1-"this is my slot", count 1, lastExp 10
-	assert.Error(t, err)
-	assert.Equal(t, "this is my slot", client.store["key1"])
-	assert.Equal(t, MAX_ATTEMPTS, client.countSetNXCall)
-	assert.Equal(t, time.Duration(10)*time.Second, client.lastExp)
+	//error -> ErrKeyExists, store: key2-"this is 2 slot"
+	assert.ErrorIs(t, err, ErrKeyExists)
+	assert.Equal(t, "this is 2 slot", client.store["key2"])
 }
 
 func TestGetFunc(t *testing.T) {
@@ -187,7 +152,7 @@ func TestGetFunc(t *testing.T) {
 			client.store = tc.store
 			client.getErr = tc.getErr
 
-			rep := newMockRepository(client, sequenceKeys())
+			rep := newMockRepository(client)
 
 			gotVal, gotErr := rep.Get(context.Background(), tc.key)
 
