@@ -5,6 +5,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/ngPhDuy/bookmark-management/internal/model"
 	"github.com/ngPhDuy/bookmark-management/internal/utils"
 	goredis "github.com/redis/go-redis/v9"
 )
@@ -24,17 +25,12 @@ type redisClient interface {
 	Get(ctx context.Context, key string) *goredis.StringCmd
 }
 
-type RedisRepository interface {
-	Set(ctx context.Context, value string, exp int) (string, error)
-	Get(ctx context.Context, key string) (string, error)
-}
-
 type redisRepository struct {
 	rdbClient          redisClient
 	randomKeyGenerator func(int) (string, error)
 }
 
-func NewRedisRepository(rdbClient redisClient) RedisRepository {
+func NewRedisRepository(rdbClient redisClient) model.Repository {
 	return &redisRepository{
 		rdbClient:          rdbClient,
 		randomKeyGenerator: utils.RandomKey,

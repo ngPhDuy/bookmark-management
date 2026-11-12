@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ngPhDuy/bookmark-management/internal/model"
 	goredis "github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/assert"
 )
@@ -74,7 +75,7 @@ func sequenceKeys(keys ...string) func(int) (string, error) {
 }
 
 // mock repository
-func newMockRepository(client redisClient, gen func(int) (string, error)) RedisRepository {
+func newMockRepository(client redisClient, gen func(int) (string, error)) model.Repository {
 	return &redisRepository{
 		rdbClient:          client,
 		randomKeyGenerator: gen,
