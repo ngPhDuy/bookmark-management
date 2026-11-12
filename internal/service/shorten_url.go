@@ -5,7 +5,6 @@ import (
 
 	"github.com/ngPhDuy/bookmark-management/internal/domain"
 	"github.com/ngPhDuy/bookmark-management/internal/model"
-	"github.com/ngPhDuy/bookmark-management/internal/utils"
 )
 
 const (
@@ -22,10 +21,10 @@ type shortenURLService struct {
 	genKeyFunc func(int) (string, error)
 }
 
-func NewShortenURLService(rep model.Repository) ShortenURLService {
+func NewShortenURLService(rep model.Repository, genKeyFunc func(int) (string, error)) ShortenURLService {
 	return &shortenURLService{
 		rep:        rep,
-		genKeyFunc: utils.RandomKey,
+		genKeyFunc: genKeyFunc,
 	}
 }
 
