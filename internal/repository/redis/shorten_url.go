@@ -2,9 +2,8 @@ package redis
 
 import (
 	"context"
+	"errors"
 	"time"
-
-	"fmt"
 
 	"github.com/ngPhDuy/bookmark-management/internal/utils"
 	goredis "github.com/redis/go-redis/v9"
@@ -13,6 +12,11 @@ import (
 const (
 	MAX_ATTEMPTS   = 5
 	MAX_KEY_LENGTH = 7
+)
+
+var (
+	ErrKeyGenerationFailed = errors.New("redis: failed to generate unique key")
+	ErrKeyNotFound         = errors.New("redis: key not found")
 )
 
 type redisClient interface {
@@ -57,11 +61,16 @@ func (r *redisRepository) Set(ctx context.Context, value string, exp int) (strin
 		}
 	}
 
-	return "", fmt.Errorf("redis: failed to set key after %d attempts", MAX_ATTEMPTS)
+	return "", ErrKeyGenerationFailed
 }
 
 func (r *redisRepository) Get(ctx context.Context, key string) (string, error) {
 	value, err := r.rdbClient.Get(ctx, key).Result()
+
+	//err is goredis.Nil -> not found
+	if errors.Is(err, goredis.Nil) {
+		return "", ErrKeyNotFound
+	}
 
 	if err != nil {
 		return "", err
