@@ -33,7 +33,7 @@ func main() {
 
 	defer rdb.Close()
 
-	engine := api.NewEngine(cfg)
+	engine := api.NewEngine(cfg, rdb)
 
 	if err := engine.Start(); err != nil {
 		panic(err)
