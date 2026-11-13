@@ -27,10 +27,13 @@ func NewShortenURLHandler(svc service.ShortenURLService) ShortenURLHandler {
 //
 // @Summary      Shorten url
 // @Description  Gen a random key and save it to redis (with retry if key already exist). Return key if success.
-// @Tags         Shorten
+// @Tags         Links
+// @Accept       json
 // @Produce      json
-// @Success      200 {object} response.ShortenURLResponse
-// @Failure      500 {object} response.ShortenURLResponse
+// @Param        request  body      request.ShortenURLRequest  true  "URL to shorten and its lifetime in seconds"
+// @Success      200      {object}  response.ShortenURLResponse
+// @Failure      400      {object}  response.ShortenURLResponse  "Invalid request body"
+// @Failure      500      {object}  response.ShortenURLResponse  "Could not generate a unique code"
 // @Router       /v1/links/shorten [post]
 func (h *shortenURLHandler) ShortenURL(c *gin.Context) {
 	var req request.ShortenURLRequest

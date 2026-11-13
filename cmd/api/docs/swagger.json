@@ -37,9 +37,70 @@
                     }
                 }
             }
+        },
+        "/v1/links/shorten": {
+            "post": {
+                "description": "Gen a random key and save it to redis (with retry if key already exist). Return key if success.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Links"
+                ],
+                "summary": "Shorten url",
+                "parameters": [
+                    {
+                        "description": "URL to shorten and its lifetime in seconds",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.ShortenURLRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.ShortenURLResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request body",
+                        "schema": {
+                            "$ref": "#/definitions/response.ShortenURLResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Could not generate a unique code",
+                        "schema": {
+                            "$ref": "#/definitions/response.ShortenURLResponse"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
+        "request.ShortenURLRequest": {
+            "type": "object",
+            "required": [
+                "exp",
+                "url"
+            ],
+            "properties": {
+                "exp": {
+                    "type": "integer"
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
         "response.HealthCheckResponse": {
             "type": "object",
             "properties": {
@@ -50,6 +111,17 @@
                     "type": "string"
                 },
                 "service_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.ShortenURLResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "message": {
                     "type": "string"
                 }
             }
