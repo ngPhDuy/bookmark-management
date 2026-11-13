@@ -51,7 +51,7 @@ func (h *shortenURLHandler) ShortenURL(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, response.ShortenURLResponse{
 			Code:    "",
-			Message: err.Error(),
+			Message: "could not generate a unique code",
 		})
 		return
 	}

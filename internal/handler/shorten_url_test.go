@@ -23,13 +23,16 @@ func TestShortenURLHandler(t *testing.T) {
 		name string
 
 		//setup
-		req interface{}
-		err error
-		key string
+		req     interface{}
+		rawBody string
+		err     error
+		key     string
 
 		//expected
 		expectedStatusCode int
 		expectedResponse   string
+		expectedSvcURL     string
+		expectedSvcExp     int
 	}{
 		{
 			name: "happy case",
@@ -41,12 +44,36 @@ func TestShortenURLHandler(t *testing.T) {
 			key:                "abracadabra",
 			expectedStatusCode: http.StatusOK,
 			expectedResponse:   `{"code":"abracadabra", "message":""}`,
+			expectedSvcURL:     "https://google.com",
+			expectedSvcExp:     60,
 		},
 		{
-			name:               "invalid request",
+			name:               "missing exp field",
 			req:                struct{ URL string }{URL: "https://google.com"},
-			err:                nil,
-			key:                "abracadabra",
+			expectedStatusCode: http.StatusBadRequest,
+			expectedResponse:   `{"code":"", "message":"invalid request format"}`,
+		},
+		{
+			name: "url is not a valid url",
+			req: request.ShortenURLRequest{
+				URL: "not-a-url",
+				Exp: 60,
+			},
+			expectedStatusCode: http.StatusBadRequest,
+			expectedResponse:   `{"code":"", "message":"invalid request format"}`,
+		},
+		{
+			name: "exp is not positive",
+			req: request.ShortenURLRequest{
+				URL: "https://google.com",
+				Exp: 0,
+			},
+			expectedStatusCode: http.StatusBadRequest,
+			expectedResponse:   `{"code":"", "message":"invalid request format"}`,
+		},
+		{
+			name:               "malformed json body",
+			rawBody:            `{"url":`,
 			expectedStatusCode: http.StatusBadRequest,
 			expectedResponse:   `{"code":"", "message":"invalid request format"}`,
 		},
@@ -59,7 +86,9 @@ func TestShortenURLHandler(t *testing.T) {
 			err:                errors.New("internal server error"),
 			key:                "abracadabra",
 			expectedStatusCode: http.StatusInternalServerError,
-			expectedResponse:   `{"code":"", "message":"internal server error"}`,
+			expectedResponse:   `{"code":"", "message":"could not generate a unique code"}`,
+			expectedSvcURL:     "https://google.com",
+			expectedSvcExp:     60,
 		},
 		{
 			name: "max retry",
@@ -70,7 +99,9 @@ func TestShortenURLHandler(t *testing.T) {
 			err:                domain.ErrShortenUrlFail,
 			key:                "abracadabra",
 			expectedStatusCode: http.StatusInternalServerError,
-			expectedResponse:   `{"code":"", "message":"shorten url fail"}`,
+			expectedResponse:   `{"code":"", "message":"could not generate a unique code"}`,
+			expectedSvcURL:     "https://google.com",
+			expectedSvcExp:     60,
 		},
 	}
 
@@ -86,8 +117,13 @@ func TestShortenURLHandler(t *testing.T) {
 			router.POST("/v1/links/shorten", h.ShortenURL)
 
 			//parse body req to bytes
-			body, err := json.Marshal(tc.req)
-			require.NoError(t, err)
+			body := []byte(tc.rawBody)
+
+			if tc.rawBody == "" {
+				marshaled, err := json.Marshal(tc.req)
+				require.NoError(t, err)
+				body = marshaled
+			}
 
 			//mock req with bytes body
 			req := httptest.NewRequest(http.MethodPost, "/v1/links/shorten", bytes.NewReader(body))
@@ -95,6 +131,10 @@ func TestShortenURLHandler(t *testing.T) {
 
 			assert.Equal(t, tc.expectedStatusCode, rec.Code)
 			assert.JSONEq(t, tc.expectedResponse, rec.Body.String())
+
+			//zero values also assert the service was never reached
+			assert.Equal(t, tc.expectedSvcURL, svc.GotURL)
+			assert.Equal(t, tc.expectedSvcExp, svc.GotExp)
 		})
 	}
 }
