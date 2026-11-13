@@ -20,6 +20,7 @@ func NewRedisHealthCheckService(redisClient *goredis.Client) RedisHealthCheckSer
 	}
 }
 
+// Check redis connection, return error if failed
 func (s *redisHealthCheckService) HealthCheck(ctx context.Context) error {
 	return s.redisClient.Ping(ctx).Err()
 }

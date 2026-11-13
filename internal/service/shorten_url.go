@@ -30,6 +30,7 @@ func NewShortenURLService(rep model.Repository, genKeyFunc func(int) (string, er
 	}
 }
 
+// Gen a random key to save it [key, url] to repository, retry if key already exist (max MAX_ATTEMPTS times)
 func (s *shortenURLService) ShortenURL(ctx context.Context, url string, exp int) (string, error) {
 	for i := 0; i < MAX_ATTEMPTS; i++ {
 		key, err := s.genKeyFunc(MAX_KEY_LENGTH)

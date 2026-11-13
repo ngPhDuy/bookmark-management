@@ -21,6 +21,15 @@ func NewRedisHealthCheckHandler(healthCheckService service.RedisHealthCheckServi
 	}
 }
 
+// HealthCheck handles health check requests.
+//
+// @Summary      Redis Health check
+// @Description  Check whether the redis service is running.
+// @Tags         Health
+// @Produce      json
+// @Success      200 {object} map[string]string
+// @Failure      500 {object} map[string]string
+// @Router       /health-check/redis [get]
 func (h *redisHealthCheckHandler) HealthCheck(c *gin.Context) {
 	if err := h.svc.HealthCheck(c); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to connect to redis"})
