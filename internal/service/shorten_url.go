@@ -13,6 +13,8 @@ const (
 )
 
 type ShortenURLService interface {
+	//Gen a random key and save it [key, url] to repository
+	//Return key if success, domain.ErrShortenUrlFail if fail
 	ShortenURL(ctx context.Context, url string, exp int) (string, error)
 }
 
@@ -28,7 +30,6 @@ func NewShortenURLService(rep model.Repository, genKeyFunc func(int) (string, er
 	}
 }
 
-// gen a random key and save it to redis (with retry if key already exist). Return key if success
 func (s *shortenURLService) ShortenURL(ctx context.Context, url string, exp int) (string, error) {
 	for i := 0; i < MAX_ATTEMPTS; i++ {
 		key, err := s.genKeyFunc(MAX_KEY_LENGTH)

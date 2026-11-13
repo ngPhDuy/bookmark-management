@@ -13,6 +13,8 @@ type RedisConfig struct {
 	DB       int
 }
 
+
+// New a redis client and check connection. Caller need to close the client
 func NewRedisClient(ctx context.Context, config *RedisConfig) (*goredis.Client, error) {
 	rdb := goredis.NewClient(&goredis.Options{
 		Addr:     config.Host + ":" + config.Port,

@@ -9,7 +9,7 @@ const (
 )
 
 type HealthCheckService interface {
-	HealthCheck() (response.HealthCheckResponse, error) //* hoặc không *
+	HealthCheck() (response.HealthCheckResponse, error)
 }
 
 type healthCheckService struct {
@@ -18,6 +18,7 @@ type healthCheckService struct {
 	instanceID  string
 }
 
+// New an instance of HealthCheckService, if instanceID is empty, it will be generated.
 func NewHealthCheckService(generator func() string, serviceName, instanceID string) HealthCheckService {
 	if instanceID == "" {
 		instanceID = generator()
