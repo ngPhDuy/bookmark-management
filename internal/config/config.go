@@ -32,10 +32,10 @@ func NewAppConfig() *AppConfig {
 
 	cfg := &AppConfig{}
 
-	err := envconfig.Process("", cfg)
-
-	if err != nil {
-		logger.Warn("Process config fail", "err", err)
+	//stop if process config fail, because we don't want to run without config
+	if err := envconfig.Process("", cfg); err != nil {
+		logger.Error("Process config fail", "err", err)
+		os.Exit(1)
 	}
 
 	return cfg
