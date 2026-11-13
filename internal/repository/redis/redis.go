@@ -10,11 +10,6 @@ import (
 	goredis "github.com/redis/go-redis/v9"
 )
 
-const (
-	MAX_ATTEMPTS   = 5
-	MAX_KEY_LENGTH = 7
-)
-
 type redisClient interface {
 	SetNX(ctx context.Context, key string, value interface{}, expiration time.Duration) *goredis.BoolCmd
 	Get(ctx context.Context, key string) *goredis.StringCmd
