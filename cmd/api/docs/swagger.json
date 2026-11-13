@@ -38,6 +38,38 @@
                 }
             }
         },
+        "/health-check/redis": {
+            "get": {
+                "description": "Check whether the redis service is running.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Health"
+                ],
+                "summary": "Redis Health check",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/v1/links/shorten": {
             "post": {
                 "description": "Gen a random key and save it to redis (with retry if key already exist). Return key if success.",

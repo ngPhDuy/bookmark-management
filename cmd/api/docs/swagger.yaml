@@ -52,6 +52,27 @@ paths:
       summary: Health check
       tags:
       - Health
+  /health-check/redis:
+    get:
+      description: Check whether the redis service is running.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Redis Health check
+      tags:
+      - Health
   /v1/links/shorten:
     post:
       consumes:
