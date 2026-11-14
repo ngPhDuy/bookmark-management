@@ -9,9 +9,12 @@ import (
 )
 
 type AppConfig struct {
-	AppPort     int    `default:"8080" envconfig:"APP_PORT"`
-	ServiceName string `default:"bookmark-management-default" envconfig:"SERVICE_NAME"`
-	InstanceID  string `default:"" envconfig:"INSTANCE_ID"`
+	AppPort       int    `default:"8080" envconfig:"APP_PORT"`
+	ServiceName   string `default:"bookmark-management-default" envconfig:"SERVICE_NAME"`
+	InstanceID    string `default:"" envconfig:"INSTANCE_ID"`
+	RedisHost     string `default:"localhost" envconfig:"REDIS_HOST"`
+	RedisPort     int    `default:"6379" envconfig:"REDIS_PORT"`
+	RedisPassword string `default:"" envconfig:"REDIS_PASSWORD"`
 }
 
 // NewAppConfig creates a new AppConfig instance by loading environment variables
@@ -29,10 +32,10 @@ func NewAppConfig() *AppConfig {
 
 	cfg := &AppConfig{}
 
-	err := envconfig.Process("", cfg)
-
-	if err != nil {
-		logger.Warn("Process config fail", "err", err)
+	//stop if process config fail, because we don't want to run without config
+	if err := envconfig.Process("", cfg); err != nil {
+		logger.Error("Process config fail", "err", err)
+		os.Exit(1)
 	}
 
 	return cfg

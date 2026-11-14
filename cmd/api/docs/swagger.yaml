@@ -1,0 +1,107 @@
+basePath: /
+definitions:
+  request.ShortenURLRequest:
+    properties:
+      exp:
+        type: integer
+      url:
+        type: string
+    required:
+    - exp
+    - url
+    type: object
+  response.HealthCheckResponse:
+    properties:
+      instance_id:
+        type: string
+      message:
+        type: string
+      service_name:
+        type: string
+    type: object
+  response.ShortenURLResponse:
+    properties:
+      code:
+        type: string
+      message:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: REST API for managing bookmarks
+  title: Bookmark Management API
+  version: "1.0"
+paths:
+  /health-check:
+    get:
+      description: Check whether the service is running.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.HealthCheckResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Health check
+      tags:
+      - Health
+  /health-check/redis:
+    get:
+      description: Check whether the redis service is running.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Redis Health check
+      tags:
+      - Health
+  /v1/links/shorten:
+    post:
+      consumes:
+      - application/json
+      description: Gen a random key and save it to redis (with retry if key already
+        exist). Return key if success.
+      parameters:
+      - description: URL to shorten and its lifetime in seconds
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/request.ShortenURLRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ShortenURLResponse'
+        "400":
+          description: Invalid request body
+          schema:
+            $ref: '#/definitions/response.ShortenURLResponse'
+        "500":
+          description: Could not generate a unique code
+          schema:
+            $ref: '#/definitions/response.ShortenURLResponse'
+      summary: Shorten url
+      tags:
+      - Links
+swagger: "2.0"
