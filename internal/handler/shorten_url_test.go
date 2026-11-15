@@ -11,8 +11,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/ngPhDuy/bookmark-management/internal/domain"
 	"github.com/ngPhDuy/bookmark-management/internal/model/request"
-	service_mock "github.com/ngPhDuy/bookmark-management/internal/service/mocks"
+	"github.com/ngPhDuy/bookmark-management/internal/service/mocks"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
@@ -25,14 +26,12 @@ func TestShortenURLHandler(t *testing.T) {
 		//setup
 		req     interface{}
 		rawBody string
-		err     error
-		key     string
+		// nil means the service must never be reached
+		setUpSvc func(svc *mocks.MockShortenURLService)
 
 		//expected
 		expectedStatusCode int
 		expectedResponse   string
-		expectedSvcURL     string
-		expectedSvcExp     int
 	}{
 		{
 			name: "happy case",
@@ -40,12 +39,12 @@ func TestShortenURLHandler(t *testing.T) {
 				URL: "https://google.com",
 				Exp: 60,
 			},
-			err:                nil,
-			key:                "abracadabra",
+			setUpSvc: func(svc *mocks.MockShortenURLService) {
+				svc.EXPECT().ShortenURL(mock.Anything, "https://google.com", 60).
+					Return("abracadabra", nil).Once()
+			},
 			expectedStatusCode: http.StatusOK,
 			expectedResponse:   `{"code":"abracadabra", "message":""}`,
-			expectedSvcURL:     "https://google.com",
-			expectedSvcExp:     60,
 		},
 		{
 			name:               "missing exp field",
@@ -83,12 +82,12 @@ func TestShortenURLHandler(t *testing.T) {
 				URL: "https://google.com",
 				Exp: 60,
 			},
-			err:                errors.New("internal server error"),
-			key:                "abracadabra",
+			setUpSvc: func(svc *mocks.MockShortenURLService) {
+				svc.EXPECT().ShortenURL(mock.Anything, "https://google.com", 60).
+					Return("", errors.New("internal server error")).Once()
+			},
 			expectedStatusCode: http.StatusInternalServerError,
 			expectedResponse:   `{"code":"", "message":"could not generate a unique code"}`,
-			expectedSvcURL:     "https://google.com",
-			expectedSvcExp:     60,
 		},
 		{
 			name: "max retry",
@@ -96,12 +95,12 @@ func TestShortenURLHandler(t *testing.T) {
 				URL: "https://google.com",
 				Exp: 60,
 			},
-			err:                domain.ErrShortenUrlFail,
-			key:                "abracadabra",
+			setUpSvc: func(svc *mocks.MockShortenURLService) {
+				svc.EXPECT().ShortenURL(mock.Anything, "https://google.com", 60).
+					Return("", domain.ErrShortenUrlFail).Once()
+			},
 			expectedStatusCode: http.StatusInternalServerError,
 			expectedResponse:   `{"code":"", "message":"could not generate a unique code"}`,
-			expectedSvcURL:     "https://google.com",
-			expectedSvcExp:     60,
 		},
 	}
 
@@ -109,7 +108,11 @@ func TestShortenURLHandler(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			svc := service_mock.NewMockShortenURLService(tc.key, tc.err)
+			svc := mocks.NewMockShortenURLService(t)
+			if tc.setUpSvc != nil {
+				tc.setUpSvc(svc)
+			}
+
 			h := NewShortenURLHandler(svc)
 
 			rec := httptest.NewRecorder()
@@ -131,10 +134,6 @@ func TestShortenURLHandler(t *testing.T) {
 
 			assert.Equal(t, tc.expectedStatusCode, rec.Code)
 			assert.JSONEq(t, tc.expectedResponse, rec.Body.String())
-
-			//zero values also assert the service was never reached
-			assert.Equal(t, tc.expectedSvcURL, svc.GotURL)
-			assert.Equal(t, tc.expectedSvcExp, svc.GotExp)
 		})
 	}
 }

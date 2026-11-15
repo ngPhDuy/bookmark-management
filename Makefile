@@ -1,7 +1,7 @@
 COVERAGE_EXCLUDE=mocks|main.go|test
 COVERAGE_THRESHOLD=80
 
-.PHONY: test docs
+.PHONY: test docs mocks
 
 test:
 	go test ./... -coverprofile=coverage.tmp -covermode=atomic -coverpkg=./... -p 1
@@ -17,3 +17,6 @@ test:
 
 docs:
 	swag init -g cmd/api/main.go -d ./ -o cmd/api/docs
+
+mocks:
+	mockery

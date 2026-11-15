@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"context"
 	"errors"
 	"net/http"
 	"net/http/httptest"
@@ -9,14 +8,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/ngPhDuy/bookmark-management/internal/service"
+	"github.com/ngPhDuy/bookmark-management/internal/service/mocks"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
-
-type stubDepHealthCheckService struct {
-	err error
-}
-
-func (s stubDepHealthCheckService) HealthCheck(ctx context.Context) error { return s.err }
 
 func TestDepHealthCheckHandler(t *testing.T) {
 	t.Parallel()
@@ -53,7 +48,10 @@ func TestDepHealthCheckHandler(t *testing.T) {
 			t.Parallel()
 			rec := httptest.NewRecorder()
 
-			handler := NewDepHealthCheckHandler(stubDepHealthCheckService{err: tc.svcErr})
+			mockSvc := mocks.NewMockDepHealthCheckService(t)
+			mockSvc.EXPECT().HealthCheck(mock.Anything).Return(tc.svcErr).Once()
+
+			handler := NewDepHealthCheckHandler(mockSvc)
 
 			router := gin.New()
 			router.GET("/health-check/redis", handler.HealthCheck)

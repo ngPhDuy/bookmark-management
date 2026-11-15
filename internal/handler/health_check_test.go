@@ -8,7 +8,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/ngPhDuy/bookmark-management/internal/model/response"
-	service_mock "github.com/ngPhDuy/bookmark-management/internal/service/mocks"
+	"github.com/ngPhDuy/bookmark-management/internal/service/mocks"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -16,29 +16,27 @@ func TestHealthCheckHandler(t *testing.T) {
 	t.Parallel()
 
 	testCase := []struct {
-		name         string
-		setUpMockSvc func() service_mock.MockHealthService
+		name string
+
+		svcResponse response.HealthCheckResponse
+		svcErr      error
 
 		expectedStatusCode int
 		expectedResponse   string
 	}{
 		{
 			name: "Happy case",
-			setUpMockSvc: func() service_mock.MockHealthService {
-				return service_mock.NewMockHealthService(response.HealthCheckResponse{
-					Message:     "OK",
-					ServiceName: "bookmark-management",
-					InstanceID:  "mock-instance-id",
-				}, nil)
+			svcResponse: response.HealthCheckResponse{
+				Message:     "OK",
+				ServiceName: "bookmark-management",
+				InstanceID:  "mock-instance-id",
 			},
 			expectedStatusCode: http.StatusOK,
 			expectedResponse:   `{"message":"OK","service_name":"bookmark-management","instance_id":"mock-instance-id"}`,
 		},
 		{
-			name: "Error case",
-			setUpMockSvc: func() service_mock.MockHealthService {
-				return service_mock.NewMockHealthService(response.HealthCheckResponse{}, errors.New("internal server error"))
-			},
+			name:               "Error case",
+			svcErr:             errors.New("internal server error"),
 			expectedStatusCode: http.StatusInternalServerError,
 			expectedResponse:   `{"error":"internal server error"}`,
 		},
@@ -49,7 +47,9 @@ func TestHealthCheckHandler(t *testing.T) {
 			t.Parallel()
 			rec := httptest.NewRecorder()
 
-			mockSvc := tc.setUpMockSvc()
+			mockSvc := mocks.NewMockHealthCheckService(t)
+			mockSvc.EXPECT().HealthCheck().Return(tc.svcResponse, tc.svcErr).Once()
+
 			handler := NewHealthCheckHandler(mockSvc)
 
 			router := gin.New()
@@ -62,5 +62,4 @@ func TestHealthCheckHandler(t *testing.T) {
 			assert.JSONEq(t, tc.expectedResponse, rec.Body.String())
 		})
 	}
-
 }

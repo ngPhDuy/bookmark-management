@@ -5,9 +5,12 @@ import (
 	"testing"
 
 	"github.com/ngPhDuy/bookmark-management/internal/domain"
-	mock "github.com/ngPhDuy/bookmark-management/internal/repository/redis/mocks"
+	"github.com/ngPhDuy/bookmark-management/internal/model/mocks"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
+
+const testURL = "https://www.google.com"
 
 func TestShortenURL(t *testing.T) {
 	t.Parallel()
@@ -16,57 +19,50 @@ func TestShortenURL(t *testing.T) {
 		name string
 
 		// Setup
-		store      map[string]string
-		repoErr    error
+		setUpRepo  func(rep *mocks.MockRepository)
 		genKeyFunc func(int) (string, error)
 		exp        int
 
 		// Expected
-		expectedKey     string
-		expectedErr     error
-		expectedCalls   int
-		expectedLastExp int
+		expectedKey string
+		expectedErr error
 	}{
 		{
 			name: "happy case 1",
-			store: map[string]string{
-				"key1": "val1", "key2": "val2", "key3": "val3",
+			setUpRepo: func(rep *mocks.MockRepository) {
+				rep.EXPECT().SetIfNotExist(mock.Anything, "mock-key", testURL, 60).
+					Return("mock-key", nil).Once()
 			},
-			repoErr: nil,
 			genKeyFunc: func(int) (string, error) {
 				return "mock-key", nil
 			},
-			exp:             60,
-			expectedKey:     "mock-key",
-			expectedErr:     nil,
-			expectedCalls:   1,
-			expectedLastExp: 60,
+			exp:         60,
+			expectedKey: "mock-key",
+			expectedErr: nil,
 		},
 		{
 			name: "retry 1 time",
-			store: map[string]string{
-				"key1": "val1",
+			setUpRepo: func(rep *mocks.MockRepository) {
+				rep.EXPECT().SetIfNotExist(mock.Anything, "key1", testURL, 10).
+					Return("", domain.ErrKeyExists).Once()
+				rep.EXPECT().SetIfNotExist(mock.Anything, "key2", testURL, 10).
+					Return("key2", nil).Once()
 			},
-			repoErr:         nil,
-			genKeyFunc:      sequenceKeys("key1", "key2"),
-			exp:             10,
-			expectedKey:     "key2",
-			expectedErr:     nil,
-			expectedCalls:   2,
-			expectedLastExp: 10,
+			genKeyFunc:  sequenceKeys("key1", "key2"),
+			exp:         10,
+			expectedKey: "key2",
+			expectedErr: nil,
 		},
 		{
 			name: "retry max times, fail",
-			store: map[string]string{
-				"key1": "val1",
+			setUpRepo: func(rep *mocks.MockRepository) {
+				rep.EXPECT().SetIfNotExist(mock.Anything, "key1", testURL, 5).
+					Return("", domain.ErrKeyExists).Times(MAX_ATTEMPTS)
 			},
-			repoErr:         nil,
-			genKeyFunc:      sequenceKeys("key1"),
-			exp:             5,
-			expectedKey:     "",
-			expectedErr:     domain.ErrShortenUrlFail,
-			expectedCalls:   MAX_ATTEMPTS,
-			expectedLastExp: 0,
+			genKeyFunc:  sequenceKeys("key1"),
+			exp:         5,
+			expectedKey: "",
+			expectedErr: domain.ErrShortenUrlFail,
 		},
 	}
 
@@ -75,21 +71,16 @@ func TestShortenURL(t *testing.T) {
 			t.Parallel()
 
 			// Setup
-			rep := mock.NewMockRedisRepository()
-			rep.SetErr = tc.repoErr
-			for k, v := range tc.store {
-				rep.Store[k] = v
-			}
+			rep := mocks.NewMockRepository(t)
+			tc.setUpRepo(rep)
 
 			// Test
 			svc := NewShortenURLService(rep, tc.genKeyFunc)
-			key, err := svc.ShortenURL(context.Background(), "https://www.google.com", tc.exp)
+			key, err := svc.ShortenURL(context.Background(), testURL, tc.exp)
 
 			// Assert
 			assert.Equal(t, tc.expectedKey, key)
-			assert.ErrorIs(t, tc.expectedErr, err)
-			assert.Equal(t, tc.expectedCalls, rep.CountSetCall)
-			assert.Equal(t, tc.expectedLastExp, rep.LastExp)
+			assert.ErrorIs(t, err, tc.expectedErr)
 		})
 	}
 }
