@@ -6,20 +6,12 @@ import (
 	goredis "github.com/redis/go-redis/v9"
 )
 
-type RedisConfig struct {
-	Host     string
-	Port     string
-	Password string
-	DB       int
-}
-
-
 // New a redis client and check connection. Caller need to close the client
 func NewRedisClient(ctx context.Context, config *RedisConfig) (*goredis.Client, error) {
 	rdb := goredis.NewClient(&goredis.Options{
-		Addr:     config.Host + ":" + config.Port,
-		Password: config.Password,
-		DB:       config.DB,
+		Addr:     config.RedisHost + ":" + config.RedisPort,
+		Password: config.RedisPassword,
+		DB:       config.RedisDB,
 	})
 
 	if err := rdb.Ping(ctx).Err(); err != nil {

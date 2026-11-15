@@ -7,7 +7,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	"github.com/ngPhDuy/bookmark-management/internal/api"
@@ -17,15 +16,11 @@ import (
 
 func main() {
 	cfg := config.NewAppConfig()
+	redisCfg := redis.NewRedisConfig()
 
 	ctx := context.Background()
 
-	rdb, err := redis.NewRedisClient(ctx, &redis.RedisConfig{
-		Host:     cfg.RedisHost,
-		Port:     fmt.Sprintf("%d", cfg.RedisPort),
-		Password: cfg.RedisPassword,
-		DB:       0,
-	})
+	rdb, err := redis.NewRedisClient(ctx, redisCfg)
 
 	if err != nil {
 		log.Fatal("Redis connection error: ", err)
