@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"fmt"
 
 	_ "github.com/ngPhDuy/bookmark-management/cmd/api/docs"
@@ -51,8 +52,10 @@ func (e *engine) initRoutes() {
 	shortenURLService := service.NewShortenURLService(redisRep, utils.RandomKey)
 	shortenURLHandler := handler.NewShortenURLHandler(shortenURLService)
 
-	redisHealthCheckService := service.NewRedisHealthCheckService(e.redisClient)
-	redisHealthCheckHandler := handler.NewRedisHealthCheckHandler(redisHealthCheckService)
+	redisHealthCheckService := service.NewDepHealthCheckService("redis", func(ctx context.Context) error {
+		return e.redisClient.Ping(ctx).Err()
+	})
+	redisHealthCheckHandler := handler.NewDepHealthCheckHandler(redisHealthCheckService)
 
 	e.app.GET("/health-check", healthCheckHandler.HealthCheck)
 	e.app.POST("/v1/links/shorten", shortenURLHandler.ShortenURL)

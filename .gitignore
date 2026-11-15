@@ -1,3 +1,4 @@
 .envcoverage.out
 coverage.html
 coverage.tmp
+.env
