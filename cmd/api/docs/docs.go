@@ -46,14 +46,14 @@ const docTemplate = `{
         },
         "/health-check/redis": {
             "get": {
-                "description": "Check whether the redis service is running.",
+                "description": "Ping an external dependency and report whether it is reachable.",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "Health"
                 ],
-                "summary": "Redis Health check",
+                "summary": "Dependency health check",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -65,7 +65,7 @@ const docTemplate = `{
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "Dependency is unreachable",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {

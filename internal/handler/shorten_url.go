@@ -46,7 +46,7 @@ func (h *shortenURLHandler) ShortenURL(c *gin.Context) {
 		return
 	}
 
-	key, err := h.shortenURLService.ShortenURL(c.Request.Context(), req.URL, req.Exp)
+	key, err := h.shortenURLService.ShortenURL(c, req.URL, req.Exp)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, response.ShortenURLResponse{

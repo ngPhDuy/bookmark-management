@@ -54,7 +54,7 @@ paths:
       - Health
   /health-check/redis:
     get:
-      description: Check whether the redis service is running.
+      description: Ping an external dependency and report whether it is reachable.
       produces:
       - application/json
       responses:
@@ -65,12 +65,12 @@ paths:
               type: string
             type: object
         "500":
-          description: Internal Server Error
+          description: Dependency is unreachable
           schema:
             additionalProperties:
               type: string
             type: object
-      summary: Redis Health check
+      summary: Dependency health check
       tags:
       - Health
   /v1/links/shorten:

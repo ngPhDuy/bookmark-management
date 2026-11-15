@@ -22,8 +22,17 @@ func NewDepHealthCheckHandler(healthCheckService service.DepHealthCheckService) 
 	}
 }
 
+// HealthCheck handles dependency health check requests.
+//
+// @Summary      Dependency health check
+// @Description  Ping an external dependency and report whether it is reachable.
+// @Tags         Health
+// @Produce      json
+// @Success      200 {object} map[string]string
+// @Failure      500 {object} map[string]string  "Dependency is unreachable"
+// @Router       /health-check/redis [get]
 func (h *depHealthCheckHandler) HealthCheck(c *gin.Context) {
-	if err := h.svc.HealthCheck(c.Request.Context()); err != nil {
+	if err := h.svc.HealthCheck(c); err != nil {
 		// Chỉ error của service mới an toàn để trả ra ngoài; error lạ có thể
 		// chứa host/credential nên phải thay bằng message chung.
 		msg := "health check failed"
