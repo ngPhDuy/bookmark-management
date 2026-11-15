@@ -1,0 +1,12 @@
+template: testify
+dir: '{{.InterfaceDir}}/mocks'
+pkgname: mocks
+filename: mocks.go
+structname: 'Mock{{.InterfaceName}}'
+packages:
+  github.com/ngPhDuy/bookmark-management/internal/service:
+    config:
+      all: true
+  github.com/ngPhDuy/bookmark-management/internal/model:
+    config:
+      all: true
