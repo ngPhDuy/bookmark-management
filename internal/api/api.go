@@ -52,6 +52,9 @@ func (e *engine) initRoutes() {
 	shortenURLService := service.NewShortenURLService(redisRep, utils.RandomKey)
 	shortenURLHandler := handler.NewShortenURLHandler(shortenURLService)
 
+	redirectURLService := service.NewRedirectURLService(redisRep)
+	redirectURLHandler := handler.NewRedirectURLHandler(redirectURLService)
+
 	redisHealthCheckService := service.NewDepHealthCheckService("redis", func(ctx context.Context) error {
 		return e.redisClient.Ping(ctx).Err()
 	})
@@ -59,5 +62,6 @@ func (e *engine) initRoutes() {
 
 	e.app.GET("/health-check", healthCheckHandler.HealthCheck)
 	e.app.POST("/v1/links/shorten", shortenURLHandler.ShortenURL)
+	e.app.GET("/v1/links/redirect/:code", redirectURLHandler.RedirectURL)
 	e.app.GET("/health-check/redis", redisHealthCheckHandler.HealthCheck)
 }
