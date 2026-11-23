@@ -10,6 +10,11 @@ definitions:
     - exp
     - url
     type: object
+  response.ErrorResponse:
+    properties:
+      message:
+        type: string
+    type: object
   response.HealthCheckResponse:
     properties:
       instance_id:
@@ -73,6 +78,33 @@ paths:
       summary: Dependency health check
       tags:
       - Health
+  /v1/links/redirect/{code}:
+    get:
+      description: Look up the original url by its short code and redirect to it.
+      parameters:
+      - description: Short code returned by the shorten endpoint
+        in: path
+        name: code
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "307":
+          description: Redirect to the original url
+          schema:
+            type: string
+        "404":
+          description: Key not found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Redirect url fail
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Redirect to the original url
+      tags:
+      - Links
   /v1/links/shorten:
     post:
       consumes:
