@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	_ "github.com/ngPhDuy/bookmark-management/cmd/api/docs"
 
@@ -19,6 +20,7 @@ import (
 
 type Engine interface {
 	Start() error
+	Handler() http.Handler
 }
 
 type engine struct {
@@ -36,6 +38,10 @@ func NewEngine(cfg *config.AppConfig, redisClient *goredis.Client) Engine {
 	engine.initRoutes()
 
 	return &engine
+}
+
+func (e *engine) Handler() http.Handler {
+	return e.app
 }
 
 func (e *engine) Start() error {
