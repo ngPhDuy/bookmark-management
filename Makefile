@@ -2,13 +2,14 @@ COVERAGE_EXCLUDE=mocks|main.go|test
 COVERAGE_THRESHOLD=80
 
 IMAGE ?= bookmark-management
+REGISTRY_IMAGE ?= duyngph1/bookmark-service
 CONTAINER ?= bookmark-management
 TAG ?= latest
 REDIS_HOST ?= host.docker.internal
 REDIS_PORT ?= 6379
 REDIS_PASSWORD ?=
 
-.PHONY: test docs mocks docker-build docker-run docker-stop
+.PHONY: test docs mocks docker-build docker-run docker-stop docker-push
 
 test:
 	go test ./... -coverprofile=coverage.tmp -covermode=atomic -coverpkg=./... -p 1
@@ -41,3 +42,7 @@ docker-run:
 
 docker-stop:
 	docker stop $(CONTAINER)
+
+docker-push: docker-build
+	docker tag $(IMAGE):$(TAG) $(REGISTRY_IMAGE):$(TAG)
+	docker push $(REGISTRY_IMAGE):$(TAG)
