@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"log/slog"
 
 	"github.com/ngPhDuy/bookmark-management/internal/domain"
 	"github.com/ngPhDuy/bookmark-management/internal/model"
@@ -27,12 +28,12 @@ func (s *redirectURLService) RedirectURL(ctx context.Context, key string) (strin
 	url, err := s.rep.Get(ctx, key)
 
 	if errors.Is(err, domain.ErrKeyNotFound) {
-		//log "get url with <key> not found"
+		slog.Warn("redirect url: key not found", "key", key)
 		return "", err
 	}
 
 	if err != nil {
-		//log error
+		slog.Error("redirect url: get key failed", "key", key, "err", err)
 		return "", domain.ErrInternalErr
 	}
 
