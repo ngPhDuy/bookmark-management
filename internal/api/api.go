@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	_ "github.com/ngPhDuy/bookmark-management/cmd/api/docs"
 
@@ -19,6 +20,7 @@ import (
 
 type Engine interface {
 	Start() error
+	Handler() http.Handler
 }
 
 type engine struct {
@@ -38,6 +40,10 @@ func NewEngine(cfg *config.AppConfig, redisClient *goredis.Client) Engine {
 	return &engine
 }
 
+func (e *engine) Handler() http.Handler {
+	return e.app
+}
+
 func (e *engine) Start() error {
 	return e.app.Run(fmt.Sprintf(":%d", e.cfg.AppPort))
 }
@@ -52,6 +58,9 @@ func (e *engine) initRoutes() {
 	shortenURLService := service.NewShortenURLService(redisRep, utils.RandomKey)
 	shortenURLHandler := handler.NewShortenURLHandler(shortenURLService)
 
+	redirectURLService := service.NewRedirectURLService(redisRep)
+	redirectURLHandler := handler.NewRedirectURLHandler(redirectURLService)
+
 	redisHealthCheckService := service.NewDepHealthCheckService("redis", func(ctx context.Context) error {
 		return e.redisClient.Ping(ctx).Err()
 	})
@@ -59,5 +68,6 @@ func (e *engine) initRoutes() {
 
 	e.app.GET("/health-check", healthCheckHandler.HealthCheck)
 	e.app.POST("/v1/links/shorten", shortenURLHandler.ShortenURL)
+	e.app.GET("/v1/links/redirect/:code", redirectURLHandler.RedirectURL)
 	e.app.GET("/health-check/redis", redisHealthCheckHandler.HealthCheck)
 }
