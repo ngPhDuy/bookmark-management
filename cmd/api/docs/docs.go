@@ -96,7 +96,7 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "307": {
+                    "302": {
                         "description": "Redirect to the original url",
                         "schema": {
                             "type": "string"
